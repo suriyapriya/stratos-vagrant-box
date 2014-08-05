@@ -17,7 +17,7 @@
 # under the License.
 
 # IP Address for this host
-IP_ADDR="192.168.56.5"
+#IP_ADDR="192.168.56.5"
 
 # Puppet Master IP Address
 PUPPET_IP_ADDR="$IP_ADDR"
@@ -266,13 +266,16 @@ function puppet_base_setup() {
   sudo apt-get install -y git
   # bc is required - see https://github.com/thilinapiy/puppetinstall/issues/6 
   sudo apt-get install -y bc
-
+  sudo apt-get install -y ntpdate
+  
   # FIXME make this idempotent - i.e. same result each time it is run
   if [ ! -d puppetinstall ]
   then
     git clone https://github.com/thilinapiy/puppetinstall
     cd puppetinstall
+    sudo service ntp stop
     echo '' | sudo ./puppetinstall -m -d $DOMAINNAME -s $PUPPET_IP_ADDR
+    sudo service ntp start
   fi
 
   [ -d /etc/puppet/modules/agent/files ] || sudo mkdir -p /etc/puppet/modules/agent/files
@@ -510,6 +513,11 @@ function start_servers() {
   docker_env+=(-e "VCLOUD_IDENTITY=$vcloud_identity")
   docker_env+=(-e "VCLOUD_CREDENTIAL=$vcloud_credential")
   docker_env+=(-e "VCLOUD_JCLOUDS_ENDPOINT=$vcloud_jclouds_endpoint")
+
+  # google compute engine
+  docker_env+=(-e "GCE_PROVIDER_ENABLED=$gce_provider_enabled")
+  docker_env+=(-e "GCE_IDENTITY=$gce_identity")
+  docker_env+=(-e "GCE_CREDENTIAL=$gce_credential")
 
   # Stratos Settings [profile=default|cc|as|sm]
   docker_env+=(-e "STRATOS_PROFILE=default")
